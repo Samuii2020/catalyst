@@ -4,6 +4,7 @@ from collections import OrderedDict
 import torch
 from torch.jit import ScriptModule
 from torch.utils.data import DataLoader, Dataset
+import torch.multiprocessing as mp
 
 from catalyst.callbacks.checkpoint import CheckpointCallback
 from catalyst.core.callback import Callback
@@ -217,7 +218,14 @@ class Runner(IStageBasedRunner):
             initial_seed=initial_seed,
         )
         self.experiment = experiment
-        distributed_cmd_run(self.run_experiment, distributed)
+        if distributed:
+            world_size = torch.cuda.device_count()
+            mp.spawn(
+                self.run_experiment,
+                args=tuple(),
+                nprocs=world_size,
+                join=True
+            )
 
     def infer(
         self,
