@@ -221,12 +221,14 @@ class Runner(IStageBasedRunner):
         if distributed:
             world_size = torch.cuda.device_count()
             mp.spawn(
-                self.run_experiment,
-                args=tuple(),
+                self.run_ddp_experiment,
+                args=[],
                 nprocs=world_size,
                 join=True
             )
 
+    def run_ddp_experiment(self, rank: int = 0, experiment=None):
+        return self.run_experiment(experiment=experiment)
     def infer(
         self,
         *,

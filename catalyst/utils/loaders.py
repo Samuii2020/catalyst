@@ -2,6 +2,7 @@ from typing import Any, Callable, Dict, Iterable, Union
 from collections import OrderedDict
 from copy import copy
 import warnings
+from functools import partial
 
 import torch
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
@@ -317,13 +318,16 @@ def get_loaders_from_params(
                 loader_params.pop(k, None)
 
         if "worker_init_fn" not in loader_params:
-            loader_params["worker_init_fn"] = lambda x: set_global_seed(
-                initial_seed + x
-            )
+
+            loader_params["worker_init_fn"] = partial(_init_function, initial_seed=initial_seed)
 
         loaders[name] = DataLoader(**loader_params)
 
     return loaders
+
+
+def _init_function(x, initial_seed):
+    return set_global_seed(x + initial_seed)
 
 
 __all__ = [
@@ -333,4 +337,5 @@ __all__ = [
     "validate_loaders",
     "get_loaders_from_params",
     "validate_loaders",
+    "_get_init_function"
 ]
